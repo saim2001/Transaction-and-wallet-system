@@ -62,11 +62,11 @@ class Transaction(BaseModel):
     )
     
     # Relationships
-    user = relationship("User", back_populates="transactions")
+    user = relationship("User", foreign_keys=[user_id],back_populates="transactions")
     project = relationship("Project", back_populates="transactions")
-    created_by_user = relationship("User", foreign_keys=[BaseModel.created_by])
-    updated_by_user = relationship("User", foreign_keys=[BaseModel.updated_by])
-    
+    created_by_user = relationship("User", foreign_keys="[Transaction.created_by]", back_populates="transactions_created")
+    updated_by_user = relationship("User", foreign_keys="[Transaction.updated_by]", back_populates="transactions_updated")
+
     # Indexes
     __table_args__ = (
         Index('idx_transaction_user_type', 'user_id', 'transaction_type'),

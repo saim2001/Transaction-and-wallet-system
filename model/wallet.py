@@ -28,9 +28,9 @@ class Wallet(BaseModel):
     )
     
     # Relationships
-    user = relationship("User", back_populates="wallet")
-    created_by_user = relationship("User", foreign_keys=[BaseModel.created_by])
-    updated_by_user = relationship("User", foreign_keys=[BaseModel.updated_by])
+    user = relationship("User", foreign_keys=[user_id],back_populates="wallet")
+    created_by_user = relationship("User", foreign_keys="[Wallet.created_by]", back_populates="wallet_created")
+    updated_by_user = relationship("User", foreign_keys="[Wallet.updated_by]", back_populates="wallet_updated")
     
     # Indexes
     __table_args__ = (
@@ -41,7 +41,7 @@ class Wallet(BaseModel):
     def __repr__(self):
         return f"<Wallet(id={self.id}, user_id={self.user_id}, balance={self.balance})>"
     
-    def add_credits(self, session, amount: Decimal):
+    def add_credits(self, session, amount: Decimal,updated_by: UUID):
         """
         Add credits to wallet (atomic operation)
         """
@@ -50,9 +50,10 @@ class Wallet(BaseModel):
         
         self.balance += amount
         self.updated_at = get_utc_now()
+        self.updated_by = updated_by
         session.commit()
     
-    def deduct_credits(self, session, amount: Decimal):
+    def deduct_credits(self, session, amount: Decimal, updated_by: UUID):
         """
         Deduct credits from wallet (atomic operation)
         """
@@ -64,6 +65,7 @@ class Wallet(BaseModel):
         
         self.balance -= amount
         self.updated_at = get_utc_now()
+        self.updated_by = updated_by
         session.commit()
     
     def has_sufficient_balance(self, amount: Decimal) -> bool:

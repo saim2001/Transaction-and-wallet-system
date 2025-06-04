@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     SECRET_KEY: str = Field(..., description="Secret key for authentication")
     ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(..., description="Access token expiration time in minutes")
     ALGORITHM: str = Field(..., description="Algorithm for generating access tokens")
+    API_SECRET_KEY: str = Field(..., description="API secret key for authentication")
     # DEBUG: bool = Field(False, description="Enable debug mode")
     # ENV: str = Field("development", description="Environment type")
 

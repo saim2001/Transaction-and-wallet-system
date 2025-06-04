@@ -13,6 +13,7 @@ class Project(BaseModel):
     name = Column(
         String(255),
         nullable=False,
+        unique=True,
         doc="Project name"
     )
     
@@ -44,9 +45,9 @@ class Project(BaseModel):
     )
     
     # Relationships
-    created_by_user = relationship("User", foreign_keys=[BaseModel.created_by])
-    updated_by_user = relationship("User", foreign_keys=[BaseModel.updated_by])
-    transactions = relationship("Transaction", back_populates="project")
+    created_by_user = relationship("User", foreign_keys="[Project.created_by]", back_populates="projects_created")
+    updated_by_user = relationship("User", foreign_keys="[Project.updated_by]", back_populates="projects_updated")
+    transactions = relationship("Transaction",back_populates="project")
     
     # Indexes
     __table_args__ = (
