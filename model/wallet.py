@@ -28,6 +28,7 @@ class Wallet(BaseModel):
     )
     
     # Relationships
+    transactions = relationship("Transaction", back_populates="wallet")
     user = relationship("User", foreign_keys=[user_id],back_populates="wallet")
     created_by_user = relationship("User", foreign_keys="[Wallet.created_by]", back_populates="wallet_created")
     updated_by_user = relationship("User", foreign_keys="[Wallet.updated_by]", back_populates="wallet_updated")
@@ -41,7 +42,7 @@ class Wallet(BaseModel):
     def __repr__(self):
         return f"<Wallet(id={self.id}, user_id={self.user_id}, balance={self.balance})>"
     
-    def add_credits(self, session, amount: Decimal,updated_by: UUID):
+    async def add_credits(self, session, amount: Decimal,updated_by: UUID, commit: bool = True):
         """
         Add credits to wallet (atomic operation)
         """
@@ -51,9 +52,10 @@ class Wallet(BaseModel):
         self.balance += amount
         self.updated_at = get_utc_now()
         self.updated_by = updated_by
-        session.commit()
+        if commit == True:
+            await session.commit()
     
-    def deduct_credits(self, session, amount: Decimal, updated_by: UUID):
+    async def deduct_credits(self, session, amount: Decimal, updated_by: UUID,commit: bool = True):
         """
         Deduct credits from wallet (atomic operation)
         """
@@ -66,10 +68,21 @@ class Wallet(BaseModel):
         self.balance -= amount
         self.updated_at = get_utc_now()
         self.updated_by = updated_by
-        session.commit()
+        if commit == True:
+            await session.commit()
     
-    def has_sufficient_balance(self, amount: Decimal) -> bool:
+    async def has_sufficient_balance(self, amount: Decimal) -> bool:
         """
         Check if wallet has sufficient balance
         """
         return self.balance >= amount
+
+    async def credit_balance(self):
+        """Calculate balance from transactions"""
+        return sum(t.credit_amount for t in self.transactions if t.status == 'COMPLETED')
+    
+   
+    async def total_invested(self):
+        """Calculate total USD invested"""
+        return sum(t.price_paid for t in self.transactions 
+                  if t.transaction_type == 'PURCHASE' and t.status == 'COMPLETED')

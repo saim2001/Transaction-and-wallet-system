@@ -1,4 +1,5 @@
 from decimal import Decimal
+import uuid
 from sqlalchemy import DECIMAL, Column, Index, String, Text
 from .base_model import BaseModel
 from sqlalchemy.orm import relationship
@@ -58,13 +59,13 @@ class Project(BaseModel):
     def __repr__(self):
         return f"<Project(id={self.id}, name={self.name}, available_credits={self.available_credits})>"
     
-    def has_sufficient_credits(self, amount: Decimal) -> bool:
+    async def has_sufficient_credits(self, amount: Decimal) -> bool:
         """
         Check if project has enough credits for purchase
         """
         return self.available_credits >= amount
     
-    def reserve_credits(self, session, amount: Decimal):
+    async def reserve_credits(self, session, amount: Decimal, updated_by: uuid.UUID, commit: bool = True):
         """
         Reserve credits for purchase (atomic operation)
         """
@@ -73,4 +74,7 @@ class Project(BaseModel):
         
         self.available_credits -= amount
         self.updated_at = get_utc_now()
-        session.commit()
+        self.updated_by = updated_by
+        
+        if commit == True:
+            await session.commit()

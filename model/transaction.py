@@ -1,7 +1,7 @@
 from sqlalchemy import DECIMAL, UUID, Column, Enum, ForeignKey, Index, String
 from .base_model import BaseModel
 from sqlalchemy.orm import relationship
-from utils.utils import get_utc_now,TransactionStatus,TransactionType
+from utils.utils import get_utc_now,TransactionStatus,TransactionType,PurchaseType
 
 
 
@@ -27,6 +27,14 @@ class Transaction(BaseModel):
         index=True,
         doc="Project involved in the transaction (nullable for topups)"
     )
+
+    wallet_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey('wallet.id', ondelete='CASCADE'),
+        nullable=False,
+        index=True,
+        doc="Wallet involved in the transaction"
+    )
     
     transaction_type = Column(
         Enum(TransactionType, name="transaction_type_enum"),
@@ -34,14 +42,39 @@ class Transaction(BaseModel):
         index=True,
         doc="Type of transaction (TOPUP, PURCHASE, REFUND)"
     )
-    
-    amount = Column(
+
+    purchase_type = Column(
+                            Enum(
+                                'BY_CREDIT', 
+                                'BY_BUDGET',
+                                native_enum=True,
+                                name="purchase_type_enum"
+                            ),
+                            nullable=True
+                        )
+
+    credit_amount = Column(
         DECIMAL(precision=15, scale=2),
         nullable=False,
         doc="Amount of credits involved"
     )
+    requested_credits = Column(
+        DECIMAL(precision=15, scale=2),
+        nullable=True,
+    )
+    requested_budget = Column(
+        DECIMAL(precision=15, scale=2),
+        nullable=True,
+    )
+    
     
     price_paid = Column(
+        DECIMAL(precision=10, scale=2),
+        nullable=True,
+        doc="Price paid for the transaction (in USD)"
+    )
+
+    price_per_credit = Column(
         DECIMAL(precision=10, scale=2),
         nullable=True,
         doc="Price paid for the transaction (in USD)"
@@ -64,6 +97,7 @@ class Transaction(BaseModel):
     # Relationships
     user = relationship("User", foreign_keys=[user_id],back_populates="transactions")
     project = relationship("Project", back_populates="transactions")
+    wallet = relationship("Wallet", back_populates="transactions")
     created_by_user = relationship("User", foreign_keys="[Transaction.created_by]", back_populates="transactions_created")
     updated_by_user = relationship("User", foreign_keys="[Transaction.updated_by]", back_populates="transactions_updated")
 
@@ -75,20 +109,24 @@ class Transaction(BaseModel):
     )
     
     def __repr__(self):
-        return f"<Transaction(id={self.id}, user_id={self.user_id}, type={self.transaction_type}, amount={self.amount}, status={self.status})>"
+        return f"<Transaction(id={self.id}, user_id={self.user_id}, type={self.transaction_type}, amount={self.credit_amount}, status={self.status})>"
     
-    def mark_completed(self, session):
+    async def mark_completed(self, session, commit: bool = True):
         """
         Mark transaction as completed
         """
         self.status = TransactionStatus.COMPLETED
         self.updated_at = get_utc_now()
-        session.commit()
+        
+        if commit:
+            await session.commit()
     
-    def mark_failed(self, session):
+    async def mark_failed(self, session, commit: bool = True):
         """
         Mark transaction as failed
         """
         self.status = TransactionStatus.FAILED
         self.updated_at = get_utc_now()
-        session.commit()
+        
+        if commit:
+            await session.commit()

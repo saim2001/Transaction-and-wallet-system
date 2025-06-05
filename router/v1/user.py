@@ -27,17 +27,15 @@ async def create_user(
     except Exception as e:
         raise e
     
-@router.post("/sign-in",status_code=201,response_model=ResponseModel[dict])
+@router.post("/sign-in",status_code=201,dependencies=[Depends(get_api_key)],response_model=ResponseModel[dict])
 async def sign_in_user(
-    form_data: OAuth2PasswordRequestForm = Depends(),
+    data: SignInRequest,
     session: AsyncSession = Depends(get_db),
-    api_key: str = Depends(api_key_header),
     ) -> ResponseModel[dict]:
 
     try:
-        service = UserService(session=session)
-        sign_in_data = SignInRequest(email=form_data.username,password=form_data.password)
-        data = await service.sign_in(data=sign_in_data)
+        service = UserService(session=session)        
+        data = await service.sign_in(data=data)
         return ResponseModel[dict](msg="Signed In Successfully",detail=data)
     except Exception as e:
         raise e

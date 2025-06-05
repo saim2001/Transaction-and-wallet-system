@@ -17,6 +17,15 @@ class TransactionType(str,enum.Enum):
     TOPUP = "TOPUP"
     PURCHASE = "PURCHASE"
     REFUND = "REFUND"
+
+
+class PurchaseType(str,enum.Enum):
+
+    BY_CREDIT = "BY_CREDIT"
+    BY_BUDGET = "BY_BUDGET"
+    
+
+
     
 class TransactionStatus(str,enum.Enum):
     PENDING = "PENDING"
@@ -45,6 +54,7 @@ def get_api_key(api_key: str = Depends(api_key_header)) -> str:
     Raises:
         HTTPException: 403 Forbidden if the API key is invalid
     """
+   
     if api_key != API_SECRET_KEY:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

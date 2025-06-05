@@ -1,6 +1,6 @@
 import os
 import uuid
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from passlib.context import CryptContext
 from jose import JWTError, jwt
 from datetime import datetime, timedelta, timezone
@@ -22,7 +22,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES
 SECRET_KEY = settings.SECRET_KEY
 ALGORITHM = settings.ALGORITHM
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/user/sign-in")
+security_scheme = HTTPBearer()
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -70,7 +70,10 @@ def verify_access_token(token: str, credential_exception: HTTPException) -> Toke
     
     return token_data
 
-def get_current_user(token: str = Depends(oauth2_scheme)) -> uuid.UUID:
+def get_current_user(token: HTTPAuthorizationCredentials = Depends(security_scheme)) -> uuid.UUID:
+
+    token = token.credentials
+    
     """Get current user ID from token"""
     credential_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
