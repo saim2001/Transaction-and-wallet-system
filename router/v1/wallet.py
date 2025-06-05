@@ -33,17 +33,16 @@ async def sign_in_user(
     except Exception as e:
         raise e
     
-@router.get("/",status_code=200,response_model=PaginatedResponse[WalletResponse])
-async def get_all(
+@router.get("/",status_code=200,response_model=WalletResponse)
+async def get_wallet(
     user_id: Annotated[uuid.UUID, Depends(get_current_user)],
-    pagination: PaginatedRequest = Depends(),
     session: AsyncSession = Depends(get_db),
     
-    ) -> PaginatedResponse[WalletResponse]:
+    ) -> WalletResponse:
 
     try:
         service = WalletService(session=session)
-        wallet_data = await service.get_all(user_id = user_id,pagination=pagination)
+        wallet_data = await service.get_by_user(user_id = user_id)
         return wallet_data
     except Exception as e:
         raise e

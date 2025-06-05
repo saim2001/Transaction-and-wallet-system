@@ -26,8 +26,10 @@ class WalletResponse(BaseModel):
      # Add computed fields
     credit_balance: Optional[float] = Field(default=None, description="Balance calculated from completed transactions")
     total_invested: Optional[float] = Field(default=None, description="Total USD invested from purchases")
-    transactions: List[TransactionResponse]
+    transactions: Optional[List[TransactionResponse]] = None
 
     class Config:
         from_attributes = True 
+
+
     

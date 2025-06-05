@@ -1,7 +1,8 @@
 
 from decimal import Decimal
 import uuid
-
+from fastapi.exceptions import HTTPException
+from fastapi import status
 from sqlalchemy import func, select
 from sqlalchemy.orm import selectinload
 from schema.pagination_schema import PaginatedRequest,PaginatedResponse
@@ -39,64 +40,57 @@ class WalletService:
                     obj_data=transaction_data,
                     commit=False
                 )
-                
-            return WalletResponse.model_validate(wallet)
-        except Exception as e:
-            raise e
 
-    async def get_all(
-            self,
-            user_id: uuid.UUID,
-            pagination: PaginatedRequest
-    ) -> PaginatedResponse[WalletResponse]:
-         
-        try:
-            
-                # Get wallets without using response_model in repository
-            filters = [self.repository.model.user_id == user_id]
-            
-            # Get raw records first
-            query = select(self.repository.model).filter(*filters).options(
-                selectinload(self.repository.model.transactions)
-            )
-            
-            count_query = select(func.count(self.repository.model.id)).filter(*filters)
-            count_result = await self.repository.db.execute(count_query)
-            total_count = count_result.scalar()
-            
-            data_query = await self.repository.db.execute(
-                query.offset(pagination.skip).limit(pagination.limit)
-            )
-            wallets = data_query.unique().scalars().all()
-            
-            # Convert to response objects with computed values
-            wallet_responses = []
-            for wallet in wallets:
-                response_data = {
+                wallet_data = {
                     'id': wallet.id,
                     'user_id': wallet.user_id,
                     'balance': wallet.balance,
                     'created_at': wallet.created_at,
                     'updated_at': wallet.updated_at,
-                    'is_active': wallet.is_active,
-                    'credit_balance': await wallet.credit_balance(),
-                    'total_invested': await wallet.total_invested(),
-                    "transactions": wallet.transactions
+                    'is_active': wallet.is_active
                 }
-                wallet_responses.append(WalletResponse(**response_data))
+                
+            return WalletResponse.model_validate(wallet_data)
+        except Exception as e:
+            raise e
+
+    async def get_by_user(
+    self,
+    user_id: uuid.UUID  # Optional: for additional security to ensure user owns the wallet
+    ) -> WalletResponse:
+    
+        try:
+            # Build filters - include user_id for security if provided
+            filters = []
+            filters.append(self.repository.model.user_id == user_id)
             
-            total_pages = (total_count + pagination.limit - 1) // pagination.limit
-            
-            return PaginatedResponse[WalletResponse](
-                page=(pagination.skip // pagination.limit) + 1,
-                page_size=pagination.limit,
-                total_count=total_count,
-                total_pages=total_pages,
-                data=wallet_responses,
+            # Get the wallet record with transactions
+            query = select(self.repository.model).filter(*filters).options(
+                selectinload(self.repository.model.transactions)
             )
+            
+            result = await self.repository.db.execute(query)
+            wallet = result.unique().scalars().first()
+            
+            if not wallet:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Wallet not found")
+            
+            # Convert to response object with computed values
+            response_data = {
+                'id': wallet.id,
+                'user_id': wallet.user_id,
+                'balance': wallet.balance,
+                'created_at': wallet.created_at,
+                'updated_at': wallet.updated_at,
+                'is_active': wallet.is_active,
+                'credit_balance': await wallet.credit_balance(),
+                'total_invested': await wallet.total_invested(),
+                "transactions": wallet.transactions
+            }
+            
+            return WalletResponse(**response_data)
 
         except Exception as e:
             raise e
-            
             
             
