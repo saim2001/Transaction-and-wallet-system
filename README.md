@@ -1,105 +1,36 @@
-# Transaction and Wallet System
+# Transaction and Wallet System 💳
 
-A robust backend API for managing user accounts, wallets, and transactions, built with FastAPI and SQLAlchemy. This system supports user registration, wallet creation, and secure transactions between wallets.
+[![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com/)
+[![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)](https://www.python.org/)
+[![Postgres](https://img.shields.io/badge/postgres-%23316192.svg?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![GitHub](https://img.shields.io/badge/github-%23121011.svg?style=for-the-badge&logo=github&logoColor=white)](https://github.com/saim2001/Transaction-and-wallet-system)
 
-## Features
+## Features ✨
 
-- **User Management**: Register and manage user accounts securely.
-- **Wallet Operations**: Create wallets linked to user accounts.
-- **Transactions**: Facilitate secure transfers between wallets.
-- **Data Validation**: Ensure data integrity using Pydantic models.
-- **Database Migrations**: Manage schema changes with Alembic.
-- **Testing**: Comprehensive test suite to ensure reliability.
+- **Wallet Operations**: Balance tracking, credit deductions, transaction history
+- **Transaction Processing**: Credit/budget purchases with validation
+- **Project Integration**: Credit reservation system with price calculations
+- **Secure API**: JWT authentication and role-based access
 
-## Tech Stack
+## Quick Start 🚀
 
-- **Framework**: FastAPI
-- **ORM**: SQLAlchemy
-- **Database**: PostgreSQL
-- **Migrations**: Alembic
-- **Testing**: Pytest
+```bash
+# 1. Clone repository
+git clone https://github.com/saim2001/Transaction-and-wallet-system.git
+cd Transaction-and-wallet-system
 
-## Getting Started
-
-### Prerequisites
-
-- Python 3.8 or higher
-- PostgreSQL
-
-### Installation
-
-1. **Clone the repository**:
-
-   ```bash
-   git clone https://github.com/saim2001/Transaction-and-wallet-system.git
-   cd Transaction-and-wallet-system
-Create a virtual environment:
-
-bash
-Copy
-Edit
+# 2. Setup environment
 python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-Install dependencies:
+source venv/bin/activate  # Linux/Mac
+venv\Scripts\activate    # Windows
 
-bash
-Copy
-Edit
+# 3. Install dependencies
 pip install -r requirements.txt
-Configure the database:
 
-Set the DATABASE_URL in your environment variables or create a .env file in the root directory:
+# 4. Configure .env (copy from .env.example)
 
-env
-Copy
-Edit
-DATABASE_URL=postgresql://username:password@localhost:5432/your_db_name
-Run database migrations:
-
-bash
-Copy
-Edit
+# 5. Run migrations
 alembic upgrade head
-Start the application:
 
-bash
-Copy
-Edit
-uvicorn main:app --reload
-The API will be available at:
-
-cpp
-Copy
-Edit
-http://127.0.0.1:8000
-API Documentation
-FastAPI provides interactive API docs:
-
-Swagger UI: http://127.0.0.1:8000/docs
-
-ReDoc: http://127.0.0.1:8000/redoc
-
-Project Structure
-graphql
-Copy
-Edit
-├── alembic/                # Database migrations
-├── config/                 # Configuration files
-├── model/                  # SQLAlchemy models
-├── repository/             # Database interaction logic
-├── router/                 # API route definitions
-├── schema/                 # Pydantic schemas
-├── service/                # Business logic
-├── tests/                  # Test cases
-├── utils/                  # Utility functions
-├── main.py                 # Application entry point
-├── requirements.txt        # Python dependencies
-└── README.md               # Project documentation
-Running Tests
-Make sure your virtual environment is activated and run:
-
-bash
-Copy
-Edit
-pytest
-This will execute all tests in the tests/ directory.
+# 6. Start server
+uvicorn app.main:app --reload
