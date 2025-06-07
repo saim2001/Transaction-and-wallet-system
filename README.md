@@ -41,13 +41,24 @@ pip install -r requirements.txt
 alembic upgrade head
 ```
 
-### 6. Run tests
-```bash
-pytest
-```
-
-
-### 7. Start server
+### 6. Start server
 ```bash
 uvicorn app.main:app --reload
 ```
+
+## Testing 🧪
+### Run all tests
+```bash
+pytest -v
+```
+
+## Project Structure 🏗️
+
+app/
+├── core/            # Configs and security
+├── models/          # SQLAlchemy models
+├── repositories/    # Database operations
+├── routes/          # API endpoints
+├── schemas/         # Pydantic models
+├── services/        # Business logic
+└── main.py          # App initialization
