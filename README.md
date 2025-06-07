@@ -54,11 +54,13 @@ pytest -v
 
 ## Project Structure 🏗️
 
+```
 app/
-├── core/            # Configs and security
-├── models/          # SQLAlchemy models
-├── repositories/    # Database operations
-├── routes/          # API endpoints
-├── schemas/         # Pydantic models
-├── services/        # Business logic
+├── config/            # Configs and security
+├── model/          # SQLAlchemy models
+├── repositorie/    # Database operations
+├── router/          # API endpoints
+├── schema/         # Pydantic models
+├── service/        # Business logic
 └── main.py          # App initialization
+```
