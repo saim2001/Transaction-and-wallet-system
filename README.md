@@ -15,13 +15,13 @@
 ## Quick Start 🚀
 
 
-# 1. Clone repository
+## 1. Clone repository
 ```bash
 git clone https://github.com/saim2001/Transaction-and-wallet-system.git
 cd Transaction-and-wallet-system
 ```
 
-# 2. Setup environment
+## 2. Setup environment
 
 ```bash
 python -m venv venv
@@ -29,19 +29,19 @@ source venv/bin/activate  # Linux/Mac
 venv\Scripts\activate    # Windows
 ```
 
-# 3. Install dependencies
+## 3. Install dependencies
 ```bash
 pip install -r requirements.txt
 ```
 
-# 4. Configure .env (copy from .env.example)
+## 4. Configure .env (copy from .env.example)
 
-# 5. Run migrations
+## 5. Run migrations
 ```bash
 alembic upgrade head
 ```
 
-# 6. Start server
+## 6. Start server
 ```bash
 uvicorn app.main:app --reload
 ```
