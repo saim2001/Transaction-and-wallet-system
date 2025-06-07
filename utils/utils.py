@@ -12,6 +12,7 @@ api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 UNIQUE_CONSTRAINT_MESSAGES = {
     "user_email_key": "A user with this email already exists.",
     "user_username_key": "This username is already taken.",
+    "project_name_key": "A project with this name already exists.",
 }
 class TransactionType(str,enum.Enum):
     TOPUP = "TOPUP"

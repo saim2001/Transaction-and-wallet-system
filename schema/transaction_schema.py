@@ -1,6 +1,6 @@
 from typing import Annotated, Optional
 import uuid
-from pydantic import BaseModel, confloat
+from pydantic import BaseModel, Field, StrictFloat, confloat
 from utils.utils import TransactionType,TransactionStatus,PurchaseType
 
 __all__ = [
@@ -23,6 +23,7 @@ class Transaction(BaseModel):
     requested_credits: Optional[Annotated[float, confloat(gt=0)]] = None
     requested_budget: Optional[Annotated[float, confloat(gt=0)]] = None
     reference: Optional[str] = None
+    status: Optional[TransactionStatus] = None
 
 class TransactionCreateRequest(Transaction):
     pass
@@ -30,7 +31,7 @@ class TransactionCreateRequest(Transaction):
 class PurchaseRequest(BaseModel):
     
     project_id: uuid.UUID
-    amount: Annotated[float, confloat(gt=0)]
+    amount: Annotated[StrictFloat, Field(gt=0, description="Must be greater than 0")]
     purchase_type: PurchaseType
 
 

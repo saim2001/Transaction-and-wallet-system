@@ -1,6 +1,6 @@
 from typing import Annotated
 import uuid
-from pydantic import BaseModel, confloat, constr
+from pydantic import BaseModel, Field, StrictFloat, confloat, constr, field_validator
 __all__ = [
     "ProjectCreateRequest",
     "ProjectResponse",
@@ -9,9 +9,17 @@ __all__ = [
 class Project(BaseModel):
     name: Annotated[str, constr(strip_whitespace=True, min_length=3, max_length=50)]
     description: Annotated[str, constr(strip_whitespace=True, min_length=3, max_length=500)]
-    total_credits: Annotated[float, confloat(gt=0)]
-    available_credits: Annotated[float, confloat(gt=0)]
-    price_per_credit: Annotated[float, confloat(gt=0)]
+    total_credits: Annotated[StrictFloat, Field(gt=0, description="Must be greater than 0")]
+    available_credits: Annotated[StrictFloat, Field()]
+    price_per_credit: Annotated[StrictFloat, Field(gt=0, description="Must be greater than 0")]
+    
+
+    @field_validator('available_credits', mode='after')
+    def check_available_not_exceed_total(cls, v, info):
+        total = info.data.get('total_credits')
+        if total is not None and v > total:
+            raise ValueError('available credits must not exceed total credits')
+        return v
 
 class ProjectCreateRequest(Project):
     pass

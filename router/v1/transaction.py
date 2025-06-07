@@ -1,6 +1,6 @@
 from typing import Annotated
 import uuid
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from schema.response_schema import ResponseModel
 from schema.user_schema import *
 from config.database import get_db
@@ -16,7 +16,15 @@ router = APIRouter(
     tags=["Transaction"]
 )
 
-@router.post("/purchase/",status_code=201,response_model=ResponseModel[TransactionResponse])
+@router.post("/purchase/",status_code=201, description="""
+    Perform a credit or budget-based purchase on a specific project.
+
+    - `purchase_type` must be either `"BY_CREDIT"` or `"BY_BUDGET"`.
+    - `amount` must be greater than zero.
+    - `project_id` should be a valid UUID of the target project.
+
+    This endpoint will return a transaction record after a successful purchase.
+    """,response_model=ResponseModel[TransactionResponse])
 async def purchase(
     data: PurchaseRequest,
     user_id: Annotated[uuid.UUID, Depends(get_current_user)],
@@ -25,7 +33,7 @@ async def purchase(
 
     try:
         service = TransactionService(session=session)
-        data = await service.purchase(data=data,user_id=user_id)
-        return ResponseModel[TransactionResponse](msg="Purchased Successfully",detail=data)
+        return await service.purchase(data=data,user_id=user_id)
+  
     except Exception as e:
         raise e

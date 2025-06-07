@@ -6,7 +6,7 @@ from fastapi import status
 from sqlalchemy import func, select
 from sqlalchemy.orm import selectinload
 from schema.pagination_schema import PaginatedRequest,PaginatedResponse
-from utils.utils import TransactionType
+from utils.utils import TransactionStatus, TransactionType
 from repository.wallet_repository import WalletRepository
 from repository.transaction_repository import TransactionRepository
 from schema.transaction_schema import TransactionCreateRequest
@@ -24,23 +24,52 @@ class WalletService:
             user_id: uuid.UUID,
             data: WalletUpdateRequest
     ) -> WalletResponse:
+        """
+        Add credits to a wallet
+
+        Args:
+        - wallet_id (uuid.UUID): The wallet ID to add credits to
+        - user_id (uuid.UUID): The user ID of the user performing the action
+        - data (WalletUpdateRequest): The data to be updated
+
+        Returns:
+        - WalletResponse: The updated wallet
+        """
         try:
             async with self.session.begin():
+                # Get the wallet
                 wallet = await self.repository.get_by_id(obj_id=wallet_id)
-                await wallet.add_credits(session=self.session, amount=Decimal(data.balance),updated_by=user_id,commit=False)
-                transaction_data = TransactionCreateRequest(
-                    user_id = user_id,
-                    wallet_id=wallet.id,
-                    transaction_type = TransactionType.TOPUP,
-                    credit_amount = 0,
-                    price_paid = data.balance,
+
+                # Check if the wallet exists
+                if not wallet:
+                    # Raise an error
+                    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Wallet not found")
+
+                # Add credits to the wallet
+                await wallet.add_credits(
+                    session=self.session,
+                    amount=Decimal(data.balance),  # Convert balance to Decimal
+                    updated_by=user_id,
+                    commit=False  # Do not commit yet
                 )
 
+                # Create a transaction for the topup
+                transaction_data = TransactionCreateRequest(
+                    user_id=user_id,
+                    wallet_id=wallet.id,
+                    transaction_type=TransactionType.TOPUP,
+                    credit_amount=0,  # Credit amount is 0 for topups
+                    price_paid=data.balance,  # Price paid is the balance
+                    status=TransactionStatus.COMPLETED
+                )
+
+                # Create the transaction
                 await self.transaction_repository.create(
                     obj_data=transaction_data,
-                    commit=False
+                    commit=False  # Do not commit yet
                 )
 
+                # Build the response
                 wallet_data = {
                     'id': wallet.id,
                     'user_id': wallet.user_id,
@@ -49,7 +78,8 @@ class WalletService:
                     'updated_at': wallet.updated_at,
                     'is_active': wallet.is_active
                 }
-                
+
+            # Return the response
             return WalletResponse.model_validate(wallet_data)
         except Exception as e:
             raise e

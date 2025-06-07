@@ -35,11 +35,25 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
-    """Create a new access token"""
+    """Create a new access token
+    
+    Takes the input data and creates a new access token with the specified
+    expiration time. If expires_delta is not specified, the token will expire
+    after ACCESS_TOKEN_EXPIRE_MINUTES minutes.
+    
+    Args:
+        data (dict): The data to encode into the token
+        expires_delta (Optional[timedelta]): The time until the token expires
+            If not specified, the token will expire after ACCESS_TOKEN_EXPIRE_MINUTES minutes
+    
+    Returns:
+        str: The encoded JWT token
+    """
     to_encode = data.copy()
     if expires_delta:
         expire = get_utc_now() + expires_delta
     else:
+        # Default to ACCESS_TOKEN_EXPIRE_MINUTES minutes if expires_delta is not specified
         expire = get_utc_now() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     
     to_encode.update({"exp": expire})
@@ -47,40 +61,64 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     return encoded_jwt
 
 def verify_access_token(token: str, credential_exception: HTTPException) -> TokenData:
-    """Verify and decode an access token"""
+    """
+    Verify and decode an access token
+    
+    If the token is invalid, raise the provided credential_exception.
+    If the token is valid, return a TokenData object with the user ID.
+    """
     try:
+        # Decode the token
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id: str = payload.get("id") # Default to USER if not specified
         
+        # Get the user ID from the payload
+        user_id: str = payload.get("id")
+        
+        # If the user ID is not specified, raise an error
         if user_id is None:
             raise credential_exception
-            
-        # Validate UUID format
+        
+        # Validate the UUID format
         try:
             uuid.UUID(user_id)
         except ValueError:
+            # If the user ID is not a valid UUID, raise an error
             raise credential_exception
-            
+        
+        # If the token is valid, return a TokenData object with the user ID
         token_data = TokenData(id=uuid.UUID(user_id))
         
     except JWTError:
-        raise credential_exception
-    except ValueError:
+        # If the token is invalid (e.g. expired, tampered with), raise an error
         raise credential_exception
     
+    except ValueError:
+        # If the token is invalid (e.g. malformed), raise an error
+        raise credential_exception
+    
+    # If the token is valid, return the TokenData object
     return token_data
 
-def get_current_user(token: HTTPAuthorizationCredentials = Depends(security_scheme)) -> uuid.UUID:
-
+def get_current_user(
+    token: HTTPAuthorizationCredentials = Depends(security_scheme)
+) -> uuid.UUID:
+    """
+    Get the current user ID from the token
+    
+    This function takes the token from the Authorization header and verifies it.
+    If the token is invalid, it raises an HTTPException with a 401 status code.
+    If the token is valid, it returns the user ID.
+    """
     token = token.credentials
     
-    """Get current user ID from token"""
+    # Raise an error if the token is invalid
     credential_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail='Could not validate credentials',
         headers={'WWW-Authenticate': 'Bearer'}
     )
-
+    
+    # Verify the token and get the user ID
     token_verification = verify_access_token(token, credential_exception)
     return token_verification.id
 
