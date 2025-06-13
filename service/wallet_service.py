@@ -81,6 +81,8 @@ class WalletService:
 
             # Return the response
             return WalletResponse.model_validate(wallet_data)
+        except ValueError as e:
+            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
         except Exception as e:
             raise e
 
